@@ -22,6 +22,7 @@ mongoose.connect(connUri, { useNewUrlParser: true })
 
 // Bodyparser
 app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
 // Add routes
 const routes = require('./routes/index.js');
