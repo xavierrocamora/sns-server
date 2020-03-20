@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const uniqueValidator = require('mongoose-unique-validator');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const environment = process.env.NODE_ENV;
 const stage = require('../config')[environment];
 
@@ -19,7 +20,7 @@ const UserSchema = new mongoose.Schema({
         required: [true, 'Surname can\'t be blank'],
         trim: true
     },
-    nick: {
+    nickname: {
         type: String,
         minlenght: [5, 'Nickname must be at least 6 characters'],
         maxlength: [20, 'Nickname must be less than 20 characters'],
@@ -43,8 +44,9 @@ const UserSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['ROOT', 'LIMITED'],
-        required: false
+        enum: ['ROOT', 'LIMITED', 'USER'],
+        required: true,
+        default: 'USER'
     },
     image: {
         type: String,
@@ -72,5 +74,33 @@ UserSchema.pre('save', function(next) {
       });
     }
   });
+
+  // Method for generating an identification token
+  UserSchema.methods.generateJWT = function() {
+  
+    const payload = {
+        id: this._id,
+        username: this.name,
+        surname: this.surname,
+        nickname: this.nickname,
+        role: this.role
+    };
+    const options = {
+        expiresIn: '2d',
+        issuer: 'devxavier'
+    }
+    const secret = process.env.JWT_SECRET;
+    const token = jwt.sign(payload, secret, options);
+
+    return token;
+  };
+
+  // Method to return a json with the user and token information to client
+  UserSchema.methods.toAuthJSON = function() {
+    return {
+      email: this.email,
+      token: this.generateJWT(),
+    };
+  };
 
 module.exports = mongoose.model('User', UserSchema);
