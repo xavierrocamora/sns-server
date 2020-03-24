@@ -16,7 +16,7 @@ if (environment !== 'production'){
 }
 
 // Connect to Mongo
-mongoose.connect(connUri, { useNewUrlParser: true })
+mongoose.connect(connUri, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('MongoDB Connected...'))
     .catch(err => console.log(err));
 
@@ -28,6 +28,21 @@ app.use(express.json());
 const routes = require('./routes/index.js');
 app.use('/api/v1', routes(router));
 
+// Error handling
+app.use(function(req, res, next) {
+    const err = new Error('Not Found');
+    err.status = 404;
+    next(err);
+  });
+  
+  app.use((err, req, res, next) => {
+    if (environment !== 'production') {
+      console.log(err.stack);
+    }
+  
+    res.status(err.status || 500);
+    res.json({ message: err.message });
+  });
 
 app.listen(`${stage.port}`, () => {
     console.log(`Server now listening at localhost:${stage.port}`);

@@ -32,7 +32,7 @@ const auth = {
         // so that it gets the decoded token
         const payload = req.decoded;
         console.log(payload);
-        if (payload && payload.role !== 'ADMIN') {
+        if (payload && payload.role !== 'ROOT') {
           return res.status(403).json({ message: 'Unauthorized access' });
         }
     
