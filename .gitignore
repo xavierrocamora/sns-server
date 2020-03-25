@@ -36,3 +36,9 @@ node_modules
 
 .idea
 *.swp
+
+# ignore files in folder uploads/users
+uploads/users/*
+
+# but keep the folder
+!uploads/users/.keep

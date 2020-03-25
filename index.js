@@ -16,7 +16,7 @@ if (environment !== 'production'){
 }
 
 // Connect to Mongo
-mongoose.connect(connUri, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(connUri, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false })
     .then(() => console.log('MongoDB Connected...'))
     .catch(err => console.log(err));
 
@@ -35,14 +35,14 @@ app.use(function(req, res, next) {
     next(err);
   });
   
-  app.use((err, req, res, next) => {
-    if (environment !== 'production') {
-      console.log(err.stack);
-    }
+app.use((err, req, res, next) => {
+  if (environment !== 'production') {
+    console.log(err.stack);
+  }
   
-    res.status(err.status || 500);
-    res.json({ message: err.message });
-  });
+  console.log('reached end of error stack');
+  res.status(err.status || 500).send({ message: err.message });
+});
 
 app.listen(`${stage.port}`, () => {
     console.log(`Server now listening at localhost:${stage.port}`);
