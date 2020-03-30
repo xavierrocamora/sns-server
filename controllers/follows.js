@@ -12,6 +12,7 @@ function prueba(req, res){
 }
 
 // Start following an user
+// TO DO: Prevent user from following the same user more than once 
 function addFollow(req, res){
     let params = req.body;
     const follow = new Follow();
@@ -41,15 +42,15 @@ function deleteFollow(req, res){
         });
 }
 
-// Get a list of users followed by an user
-function getFollowedUsers(req, res){
+// Get a paginated list of users followed by an user
+function getFollowedUsers(req, res, next){
     // this method can get an user id by url paramaters, 
     // that's the case of an user asking for followed users from another user
     // otherwise assume it's the user asking for his/her followed users
     // in which case just pick id from decoded token
     let userId = req.decoded.id;
 
-    if(req.params.id){
+    if(req.params.id && req.params.pageNumber){
         userId = req.params.id;
     }
 
@@ -57,6 +58,8 @@ function getFollowedUsers(req, res){
 
     if(req.params.pageNumber) {
         pageNumber = req.params.pageNumber;
+    }else{
+        pageNumber = req.params.id;
     }
 
     Follow
@@ -73,17 +76,72 @@ function getFollowedUsers(req, res){
               pages: Math.ceil(total/stage.itemsPerPage)
             });
         });
+}
 
+// Get a paginated list of users following the requested user
+function getFollowers(req, res, next){
+    let userId = req.decoded.id;
 
+    if(req.params.id && req.params.pageNumber){
+        userId = req.params.id;
+    }
 
+    let pageNumber = 1;
 
+    if(req.params.pageNumber) {
+        pageNumber = req.params.pageNumber;
+    }else{
+        pageNumber = req.params.id;
+    }
 
+    Follow
+        .find({followedUser: userId})
+        .populate({path: 'user'})
+        .paginate(pageNumber, stage.itemsPerPage, (err, follows, total) => {
+            if (err) { return next(err); }
+      
+            if (!follows) return res.status(404).send({ message: 'You are not being followed by any users'})
+            
+            return res.status(200).send({
+              follows,
+              total,
+              pages: Math.ceil(total/stage.itemsPerPage)
+            });
+        });
+}
 
+// getFollowedUsers and getFollowedUsers without pagination
+function getNoPaginationFollowLists(req, res, next){
+    let userId = req.decoded.id;
+
+    let find;
+
+    // if it receives a followed parameter
+    if(req.params.followed){
+        // then get a list of followers
+        find = Follow.find({followedUser: userId});
+    }else{
+        // otherwise get a list of users followed by user
+        find = Follow.find({user: userId});
+    }
+
+    find.populate('user followedUser')
+        .exec(
+            (err, follows) => {
+                if (err) { return next(err); }
+          
+                if (!follows) return res.status(404).send({ message: 'User is not being followed by any users'})
+                
+                return res.status(200).send({follows});
+            }
+        );
 }
 
 module.exports = {
     prueba,
     addFollow,
     deleteFollow,
-    getFollowedUsers
+    getFollowedUsers,
+    getFollowers,
+    getNoPaginationFollowLists
 }
