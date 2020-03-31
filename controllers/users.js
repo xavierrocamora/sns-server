@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Follow = require('../models/Follow');
 const bcrypt = require('bcryptjs');
 const environment = process.env.NODE_ENV;
 const stage = require('../config')[environment];
@@ -75,18 +76,45 @@ function getUser(req, res) {
         return res.status(403).send({ message: 'User does not exist' });
       }
 
-      return res.status(200).send({user});
+      // Check if current user is already following the requested user or not
+      checkFollowRelations(req.decoded.id, req.params.id)
+        .then((value) => {
+          user.password = undefined;
+          return res.status(200).send({
+            user,
+            following: value.following,
+            followed: value.followed
+          });
+        });
+
     }).catch((err) => {
         return res.status(500).send({ message: 'Error processing the petition'})
     });
-
 }
 
-// Return paginated users 
+// auxiliary function to get the follow relations stablished between two users
+async function checkFollowRelations(decodedUserId, followedUserId) {
+  // return the follow relation document if following that user or null if not following
+  const following = await Follow
+        .findOne({"user": decodedUserId, "followedUser": followedUserId});
+  
+  // return the follow relation document if followed by that user or null if not followed
+  const followed = await Follow
+        .findOne({"user": followedUserId, "followedUser": decodedUserId});
+
+  return {
+    following: following,
+    followed: followed
+  }
+}
+
+// Return paginated users
+// additionally attach a list of followed user ids and follower ids
+// for the authenticated user 
 function getUsers(req,res, next) {
 
   // get the id of the authenticated user
-  let identity_user_id = req.decoded.id;
+  let decodedUserId = req.decoded.id;
   let pageNumber = 1;
 
   if(req.params.pageNumber) {
@@ -101,13 +129,75 @@ function getUsers(req,res, next) {
 
       if (!users) return res.status(404).send({ message: 'There are no registered users'})
       
-      return res.status(200).send({
-        users,
-        total,
-        pages: Math.ceil(total/stage.itemsPerPage)
-      });
+      getFollowRelationsIds(decodedUserId)
+        .then((value) => {
+          return res.status(200).send({
+            users,
+            followedUsers: value.followed,
+            followers: value.followers,
+            total,
+            pages: Math.ceil(total/stage.itemsPerPage)
+          });
+        });    
   });
+}
 
+// auxiliary function that returns a json 
+// with the Ids of followed users and Ids of followers
+// for a given user
+async function getFollowRelationsIds(userId) {
+  const followedUsersIds = await Follow
+    .find({"user": userId})
+    .select({'_id': 0, '__v': 0, 'user': 0});
+  
+  let followedUserIdsList = [];
+
+  if (followedUsersIds) {   
+    followedUsersIds.forEach((follow) => {
+      followedUserIdsList.push(follow.followedUser);
+    });
+  }
+
+  const followerUsersIds = await Follow
+    .find({"followedUser": userId})
+    .select({'_id': 0, '__v': 0, 'user': 0});
+  
+  let followerUserIdsList = [];
+
+  if (followerUsersIds) {   
+    followerUsersIds.forEach((follow) => {
+      followerUserIdsList.push(follow.user);
+    });
+  }
+
+    return {
+      followed: followedUserIdsList,
+      followers: followerUserIdsList
+    }
+}
+
+// Method for getting data counters about follow relations,
+// messages, ... of a given user
+function getCounters(req, res) {
+  let userId = req.decoded.id;
+  if(req.params.id) {
+    userId = req.params.id; 
+  }
+  getFollowCounters(userId).then((value) =>{
+    return res.status(200).send(value);
+  });
+}
+
+//
+async function getFollowCounters(userId) {
+  const followedCounter = await Follow.count({"user": userId});
+
+  const followersCounter = await Follow.count({"followedUser": userId});
+
+  return {
+    followed: followedCounter,
+    followers: followersCounter
+  }
 }
 
 // function to allow an user to update his/her profile
@@ -199,6 +289,7 @@ module.exports = {
     login,
     getUser,
     getUsers,
+    getCounters,
     updateUser,
     uploadImage,
     downloadImage

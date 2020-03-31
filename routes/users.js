@@ -5,7 +5,8 @@ const environment = process.env.NODE_ENV;
 const stage = require('../config')[environment];
 const md_upload = multiparty({uploadDir: stage.userImagesFolder});
 
-
+// WARNING: the order of route insertions is critical for a proper performance
+// DO NOT change the stablished order routes and middleware are added
 module.exports = (router) => {
     router.route('/users')
         .get(auth.required, auth.mustBeAdmin, userController.home);
@@ -19,9 +20,14 @@ module.exports = (router) => {
     router.route('/users/downloadImg/:imageFile')
         .get(userController.downloadImage);
 
+    router.route('/users/counters/:id?')
+        .get(auth.required, userController.getCounters);
+
     router.route('/users/:id')
         .get(auth.required, userController.getUser)
         .put(auth.required, userController.updateUser);
+
+    
 
     
     router.route('/register')

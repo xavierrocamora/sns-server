@@ -7,7 +7,8 @@ const PublicationSchema = new mongoose.Schema({
     },
     text: {
         type: String,
-        required: true
+        required: [true, 'Must fill text field'],
+        trim: true
     },
     file: {
         type: String,
