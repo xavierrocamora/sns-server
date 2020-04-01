@@ -20,6 +20,7 @@ module.exports = (router) => {
     router.route('/users/downloadImg/:imageFile')
         .get(userController.downloadImage);
 
+    // GET: get statistic counters for an user  (:id id of user, default: authenticated user)
     router.route('/users/counters/:id?')
         .get(auth.required, userController.getCounters);
 

@@ -3,7 +3,7 @@ const auth = require('../utils/auth');
 
 module.exports = (router) => {
     // GET: lists all followed users or users following the user (boolean :followed)
-    // POST: start following an user (body)
+    // POST: start following an user (body json)
     router.route('/follows/:followed?')
         .get(auth.required, followsController.getNoPaginationFollowLists)
         .post(auth.required, followsController.addFollow);

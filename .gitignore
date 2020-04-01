@@ -39,6 +39,8 @@ node_modules
 
 # ignore files in folder uploads/users
 uploads/users/*
+uploads/publications/*
 
 # but keep the folder
 !uploads/users/.keep
+!uploads/publications/.keep

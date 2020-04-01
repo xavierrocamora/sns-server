@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Follow = require('../models/Follow');
+const Publication = require('../models/Publication');
 const bcrypt = require('bcryptjs');
 const environment = process.env.NODE_ENV;
 const stage = require('../config')[environment];
@@ -183,20 +184,23 @@ function getCounters(req, res) {
   if(req.params.id) {
     userId = req.params.id; 
   }
-  getFollowCounters(userId).then((value) =>{
+  getFollowAndPublicationCounters(userId).then((value) =>{
     return res.status(200).send(value);
   });
 }
 
-//
-async function getFollowCounters(userId) {
+// Auxiliary function to get counters for follow data and publications
+async function getFollowAndPublicationCounters(userId) {
   const followedCounter = await Follow.count({"user": userId});
 
   const followersCounter = await Follow.count({"followedUser": userId});
 
+  const publicationCounter = await Publication.count({"user": userId});
+
   return {
     followed: followedCounter,
-    followers: followersCounter
+    followers: followersCounter,
+    publications: publicationCounter
   }
 }
 

@@ -1,21 +1,31 @@
 const mongoose = require('mongoose');
 
-const Messsagechema = new mongoose.Schema({
+const MessageSchema = new mongoose.Schema({
     sender: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        required: [true, 'Sender is missing'],
+        trim: true
     },
     receiver: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        required: [true, 'Must specify the receiver of the message'],
+        trim: true
     },
     text: {
         type: String,
-        required: true
+        required: [true, 'Message field can not be blank'],
+        trim: true
     },
     created_at: {
         type: String,
         required: true
+    },
+    read: {
+        type: String,
+        required: true,
+        default: 'false'
     }
 });
 
