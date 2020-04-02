@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const logger = require('morgan');
 const mongoose = require('mongoose');
+const cors = require('cors');
 
 const connUri = process.env.MONGO_CONN_URL;
 const environment = process.env.NODE_ENV;
@@ -23,6 +24,9 @@ mongoose.connect(connUri, { useNewUrlParser: true, useUnifiedTopology: true, use
 // Bodyparser
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+
+// CORS
+app.use(cors());
 
 // Add routes
 const routes = require('./routes/index.js');
