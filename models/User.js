@@ -81,10 +81,12 @@ UserSchema.pre('save', function(next) {
   
     const payload = {
         id: this._id,
-        username: this.name,
+        name: this.name,
         surname: this.surname,
         nickname: this.nickname,
-        role: this.role
+        role: this.role,
+        email: this.email,
+        image: this.image
     };
     const options = {
         expiresIn: '2d',

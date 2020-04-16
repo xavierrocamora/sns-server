@@ -24,7 +24,7 @@ function register (req, res){
     // and hashing the password before storing it to DB
     user.save()
         .then(() => {
-            return res.status(201).json(user);
+            return res.status(201).send({user: user});
         })
         .catch((err) => {
             if (err.name == 'ValidationError') {
@@ -57,11 +57,11 @@ async function login (req, res) {
 
       //Checking if the email exists
     const user = await User.findOne({email: req.body.email});
-    if (!user) return res.status(400).send('Email or password is wrong');
+    if (!user) return res.status(400).send({message: 'Email or password is wrong'});
 
     //Checking password
     const validPass = await bcrypt.compare(req.body.password, user.password);
-    if (!validPass) return res.status(400).send('Invalid password');
+    if (!validPass) return res.status(400).send({message: 'Invalid password'});
     
     console.log(user.generateJWT());
     res.header('auth-token', user.generateJWT()).send(user.toAuthJSON());
@@ -218,13 +218,38 @@ function updateUser (req, res, next) {
     return res.status(500).send({ message: 'Do not have privileges to modify this profile'});
   }
 
-  User.findByIdAndUpdate(requestedUserId, updatedFields, {new:true}, (err, updatedUser) => {
-    if (err) { return next(err); }
+  // if either nickname or email are duplicated 
+      // a validation error might happen
+  User.find({ $or: [
+    {email: updatedFields.email},
+    {nickname: updatedFields.nickname}
+  ]}).exec((err, users) => {
+    let userExists = false;
+    users.forEach((user) => {
+      if(user._id != requestedUserId) userExists = true;
+    });
+    
+    if (userExists){
+      return res.status(422).send({message: "nickname or email are already taken!"});
+    }
 
-    if(!updatedUser) return res.status(404).send({ message: 'Could not update user'});
+    // no user with same email or nickname found
+    // then try to update the document
+    User.findByIdAndUpdate(requestedUserId, updatedFields, {new:true}, (err, updatedUser) => {      
+      if (err) { 
+          return next(err);
+      }
+  
+      if(!updatedUser) return res.status(404).send({ message: 'Could not update user'});
+  
+      return res.status(200).send({ user: updatedUser});
+    });
+      
+    
 
-    return res.status(200).send({ user: updatedUser});
-  });    
+  });
+
+      
 }
 
 // Upload files from client user's image/avatar

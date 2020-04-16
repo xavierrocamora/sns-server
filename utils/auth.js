@@ -6,10 +6,10 @@ const auth = {
         const authorizationHeader = req.headers.authorization;
         //console.log(authorizationHeader);
         if (!authorizationHeader) {
-            return res.status(401).send('Access Denied!');       
+            return res.status(401).send({message: 'Access Denied!'});       
         } else {   
             const token = req.headers.authorization.split(' ')[1]; // Bearer <token>
-            if(!token) return res.status(401).send('Access Denied!');
+            if(token == null) return res.status(401).send({message: 'Access Denied!'});
 
             try{
                 const options = {
@@ -22,7 +22,7 @@ const auth = {
                 // We call next to pass execution to the subsequent middleware
                 next();
             }catch(err){
-                res.status(400).send('Invalid Token');
+                res.status(400).send({message: 'Invalid Token'});
         
             }
         }  
