@@ -279,6 +279,8 @@ function uploadImage (req, res, next) {
     
         if(!updatedUser) return res.status(404).send({ message: 'Could not update user'});
     
+        //don't send password info!
+        delete updatedUser.password;
         return res.status(200).send({ user: updatedUser });
       });    
     }else{
