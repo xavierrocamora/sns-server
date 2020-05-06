@@ -51,11 +51,14 @@ function getPublicationsFromFollowedUsers(req, res) {
             follows.forEach((follow) => {
                 followedUsersIdsList.push(follow.followedUser);
             });
+            // allow to add the user's own publications to the result of the query
+            followedUsersIdsList.push(decodedId);
 
             // search for all object which user value is within the given array
+            // - sign tells sort to return an inversed list from newer to older
             Publication
                 .find({user: {"$in": followedUsersIdsList}})
-                .sort('created_at')
+                .sort('-created_at')
                 .populate('user')
                 .paginate(pageNumber, stage.itemsPerPage, (err, publications, total) => {
                     if (err) { return next(err); }
@@ -65,7 +68,8 @@ function getPublicationsFromFollowedUsers(req, res) {
                     return res.status(200).send({
                       publications,
                       total,
-                      pages: Math.ceil(total/stage.itemsPerPage)
+                      pages: Math.ceil(total/stage.itemsPerPage),
+                      itemsPage: stage.itemsPerPage
                     });
                 });
         });
