@@ -13,6 +13,9 @@ module.exports = (router) => {
     router.route('/publications/page/:pageNumber?')
         .get(auth.required, publicationController.getPublicationsFromFollowedUsers);
 
+    router.route('/publications/user/:userId/:pageNumber?')
+        .get(auth.required, publicationController.getPublicationsFromUser);
+
     // POST: upload an image to a given publication  (:id of publication)
     router.route('/publications/uploadImg/:id')
         .post(auth.required, md_upload, publicationController.uploadImage);

@@ -33,14 +33,14 @@ function addPublication(req, res) {
 }
 
 // Get all publications done by the users followed by user
-function getPublicationsFromFollowedUsers(req, res) {
+function getPublicationsFromFollowedUsers(req, res, next) {
     let decodedId = req.decoded.id;
 
     let pageNumber = 1;
     if (req.params.pageNumber){
         pageNumber = req.params.pageNumber;
     }
-    console.log('Entro');
+
     Follow.find({user: decodedId})
         .populate('followedUser')
         .exec((err, follows) => {
@@ -73,6 +73,40 @@ function getPublicationsFromFollowedUsers(req, res) {
                     });
                 });
         });
+}
+
+// Method that gets all the publications done by a specified user
+function getPublicationsFromUser(req, res, next) {
+  let decodedId = req.decoded.id;
+
+  let pageNumber = 1;
+  if (req.params.pageNumber){
+      pageNumber = req.params.pageNumber;
+  }
+
+  let userId = decodedId;
+  if(req.params.userId){
+    userId = req.params.userId;
+  }
+
+  // search for all publications for that user
+  // - sign tells sort to return an inversed list from newer to older
+  Publication
+      .find({user: userId})
+      .sort('-created_at')
+      .populate('user')
+      .paginate(pageNumber, stage.itemsPerPage, (err, publications, total) => {
+          if (err) { return next(err); }
+            
+          if (!publications) return res.status(404).send({ message: 'There are no publications from user'})
+                  
+            return res.status(200).send({
+              publications,
+              total,
+              pages: Math.ceil(total/stage.itemsPerPage),
+              itemsPage: stage.itemsPerPage
+            });
+        });     
 }
 
 function getPublication(req, res) {
@@ -172,6 +206,7 @@ module.exports = {
     home,
     addPublication,
     getPublicationsFromFollowedUsers,
+    getPublicationsFromUser,
     getPublication,
     deletePublication,
     uploadImage,
