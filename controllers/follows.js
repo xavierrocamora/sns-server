@@ -70,13 +70,57 @@ function getFollowedUsers(req, res, next){
       
             if (!follows) return res.status(404).send({ message: 'User is not following any users'})
             
-            return res.status(200).send({
-              follows,
-              total,
-              pages: Math.ceil(total/stage.itemsPerPage)
+            // add a list of ids from users followed by the authenticated user
+            // as well as a list of his/her follower ids
+            // useful when watching follow relations of other users but want to be able
+            // to use follow and unfollow buttons on them
+            getFollowRelationsIds(req.decoded.id)
+            .then((value) => {
+                return res.status(200).send({
+                    follows,
+                    followedUsers: value.followed,
+                    followers: value.followers,
+                    total,
+                    pages: Math.ceil(total/stage.itemsPerPage)
+                });
+
             });
         });
 }
+
+// auxiliary function that returns a json 
+// with the Ids of followed users and Ids of followers
+// for a given user
+async function getFollowRelationsIds(userId) {
+    const followedUsersIds = await Follow
+      .find({"user": userId})
+      .select({'_id': 0, '__v': 0, 'user': 0});
+    
+    let followedUserIdsList = [];
+  
+    if (followedUsersIds) {   
+      followedUsersIds.forEach((follow) => {
+        followedUserIdsList.push(follow.followedUser);
+      });
+    }
+  
+    const followerUsersIds = await Follow
+      .find({"followedUser": userId})
+      .select({'_id': 0, '__v': 0, 'user': 0});
+    
+    let followerUserIdsList = [];
+  
+    if (followerUsersIds) {   
+      followerUsersIds.forEach((follow) => {
+        followerUserIdsList.push(follow.user);
+      });
+    }
+  
+      return {
+        followed: followedUserIdsList,
+        followers: followerUserIdsList
+      }
+  }
 
 // Get a paginated list of users following the requested user
 function getFollowers(req, res, next){
@@ -102,10 +146,20 @@ function getFollowers(req, res, next){
       
             if (!follows) return res.status(404).send({ message: 'You are not being followed by any users'})
             
-            return res.status(200).send({
-              follows,
-              total,
-              pages: Math.ceil(total/stage.itemsPerPage)
+            // add a list of ids from users followed by the authenticated user
+            // as well as a list of his/her follower ids
+            // useful when watching follow relations of other users but want to be able
+            // to use follow and unfollow buttons on them
+            getFollowRelationsIds(req.decoded.id)
+            .then((value) => {
+                return res.status(200).send({
+                    follows,
+                    followedUsers: value.followed,
+                    followers: value.followers,
+                    total,
+                    pages: Math.ceil(total/stage.itemsPerPage)
+                });
+
             });
         });
 }
