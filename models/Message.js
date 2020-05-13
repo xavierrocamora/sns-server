@@ -24,7 +24,6 @@ const MessageSchema = new mongoose.Schema({
     },
     read: {
         type: String,
-        required: true,
         default: 'false'
     }
 });

@@ -39,6 +39,7 @@ function getMessages(req, res, next) {
 
     Message.find({receiver: decodeUserId})
         .populate('sender', 'name surname _id nickname image')
+        .sort('-created_at')
         .paginate(pageNumber, stage.itemsPerPage, (err, messages, total) => {
             if (err) { return next(err); }
               
@@ -64,6 +65,7 @@ function getSentMessages(req, res, next) {
 
     Message.find({sender: decodeUserId})
         .populate('sender receiver', 'name surname _id nickname image')
+        .sort('-created_at')
         .paginate(pageNumber, stage.itemsPerPage, (err, messages, total) => {
             if (err) { return next(err); }
               
