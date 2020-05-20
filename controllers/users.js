@@ -63,7 +63,6 @@ async function login (req, res) {
     const validPass = await bcrypt.compare(req.body.password, user.password);
     if (!validPass) return res.status(400).send({message: 'Invalid password'});
     
-    console.log(user.generateJWT());
     res.header('auth-token', user.generateJWT()).send(user.toAuthJSON());
     
     console.log('User logged in');

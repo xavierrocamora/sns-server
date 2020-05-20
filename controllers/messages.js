@@ -94,7 +94,23 @@ function getNotReadMessagesCounter(req, res, next){
         });
 }
 
-function setAsReadMessage(req, res, next){
+// set a specified message as read
+function setAsRead(req, res, next){
+    let decodeUserId = req.decoded.id;
+    let messageId = req.params.id;
+
+    Message.update({receiver: decodeUserId, _id: messageId}, {read: 'true'}, (err, message) =>{
+        if (err) { return next(err); }
+
+        return res.status(200).send({
+            'message': message
+        });
+    });
+
+}
+
+// set all messages of an user as read
+function setAllAsRead(req, res, next){
     let decodeUserId = req.decoded.id;
 
     // option multi updates all found documents, without it it would update just one document
@@ -113,5 +129,6 @@ module.exports = {
     getMessages,
     getSentMessages,
     getNotReadMessagesCounter,
-    setAsReadMessage
+    setAsRead,
+    setAllAsRead
 }

@@ -11,9 +11,9 @@ module.exports = (router) => {
     router.route('/messages/mailbox/notRead')
         .get(auth.required, messageController.getNotReadMessagesCounter);
 
-    // put: set all user messages as read
-    router.route('/messages/mailbox/setAsRead')
-        .put(auth.required, messageController.setAsReadMessage);
+    // put: set a specified user messages as read
+    router.route('/messages/mailbox/setAsRead/:id')
+        .put(auth.required, messageController.setAsRead);
 
     // GET: obtain a paginated list of messages sent to that user
     router.route('/messages/mailbox/:pageNumber?')
