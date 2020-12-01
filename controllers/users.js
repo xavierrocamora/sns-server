@@ -16,7 +16,6 @@ function home(req, res){
 
 function register (req, res){
 
-    console.log(req.body);
     const user = new User(req.body);
 
     // We take advantage of moongose built-in schema validators
