@@ -258,7 +258,10 @@ function uploadImage (req, res, next) {
     // Found a file attached to request, proceed processing the petition
     let filePath = req.files.image.path;
     console.log(filePath);
-    let fileSplit = filePath.split('\\');
+    // local
+    //let fileSplit = filePath.split('\\');
+    // heroku
+    let fileSplit = filePath.split('\/');
     console.log(fileSplit);
     let fileName = fileSplit[2];
 
